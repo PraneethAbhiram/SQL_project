@@ -161,7 +161,7 @@ This project is built to:
 
 ## 👤 Author
 
-Abhiram  
+Praneeth Abhiram  
 Aspiring Data Engineer | Azure | SQL | Data Platforms
 
 
