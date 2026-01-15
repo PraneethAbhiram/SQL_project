@@ -1,1 +1,676 @@
+-- FIRST SELECT --
+SELECT * FROM dim_customer;
+
+SELECT 
+	customer_key, 
+    customer_id, 
+    first_name
+FROM dim_customer;
+
+-- LIMIT --
+
+SELECT
+	customer_key,
+    customer_id,
+    first_name
+FROM 
+	dim_customer
+LIMIT 15;
+
+-- WHERE(condition) --
+-- level-1--
+SELECT 
+	* 
+FROM 
+	dim_customer
+WHERE 
+	(gender = 'F') AND (country = 'France') AND (join_date > 2022-01-01);
+    
+-- level 2 --
+
+SELECT 
+	*
+FROM 
+	dim_customer
+WHERE 
+	(gender = 'M') AND ((country = 'France') OR (join_date > 2022-04-22 )); -- uses of braces -- 
+    
+-- LIKE operator --
+
+-- names starting with T and ending with Y --
+
+SELECT *
+FROM dim_customer
+WHERE
+	first_name LIKE 'T%';
+    
+SELECT 
+	*
+FROM
+	dim_customer
+WHERE
+	first_name LIKE 'T%Y';
+    
+-- fourth alphabet is F --
+
+SELECT
+	*
+FROM 
+ dim_customer
+WHERE 
+	first_name LIKE 'T__f%y';
+    
+-- SORTING --
+SELECT
+	*
+FROM
+	dim_product
+ORDER BY unit_price DESC;
+
+
+-- ALIAS
+SELECT 
+	product_key AS 'product key',
+    product_id AS 'productID',
+    category,
+    product_name AS 'product name'
+FROM 
+	dim_product;
+
+    
+-- GROUPING --
+
+SELECT 
+	category,
+    avg(unit_price) AS 'avg price',
+    sum(unit_price) AS 'total price'
+FROM 
+	dim_product
+GROUP BY category; -- We cannot use aggregated query without GROUP BY
+
+
+
+-- HAVING -- -- having is the pro version of where clause --
+
+SELECT 
+ category,
+ avg(unit_price) AS 'avg_price',
+ sum(unit_price) AS 'total_price'
+FROM 
+	dim_product
+GROUP BY 
+	category
+HAVING 
+	(avg_price > 500) AND (total_price > 41000);
+    
+-- execution flow --
+
+SELECT 
+	first_name AS 'name',
+	COUNT(*) AS total_customers	/*Every column in SELECT must be either:
+									inside GROUP BY
+									OR inside an aggregate function (COUNT, MAX, MIN, SUM…)*/
+FROM
+	dim_customer
+WHERE (gender = 'M')
+GROUP BY first_name;
+
+SELECT 
+    first_name AS name,
+    COUNT(*) AS total_customers
+FROM dim_customer
+WHERE country = 'France'
+GROUP BY first_name
+HAVING COUNT(*) > 1;   -- “WHERE filters rows before grouping, HAVING filters aggregated groups after GROUP BY.”
+
+
+
+-- JOINS --
+
+SELECT * FROM dim_customer;
+SELECT * FROM dim_product;						
+SELECT * FROM dim_date;
+
+CREATE TABLE orders(
+	order_id INT,
+    cust_id INT,
+    price INT
+);
+ALTER TABLE orders
+RENAME COLUMN customer_id TO cust_id;
+
+INSERT INTO orders 
+VALUES 
+(1,101,1000),
+(2,201,1100),
+(3,501,1200);
+
+CREATE TABLE customers(
+	id INT,
+    name VARCHAR(100),
+    email VARCHAR(100)
+);
+
+INSERT INTO customers 
+VALUES 
+(101,'abhi', 'aa'),
+(202,'ansh', 'bb'),
+(301,'lamba','cc');
+
+-- INNER JOIN
+SELECT 
+	*
+FROM 
+	orders o
+INNER JOIN 
+	customers c 
+    ON 
+		(o.cust_id = c.id);
+    
+-- LEFT JOIN
+
+SELECT 
+	*
+FROM
+	orders o
+LEFT JOIN customers c ON o.cust_id = c.id;
+
+-- FULL JOIN --(not supported)
+
+
+-- FULL OUTER JOIN customers c;
+
+-- UNIONS --we can combine n number of queries --
+SELECT 
+	*
+FROM
+	orders o
+LEFT JOIN customers c ON c.id = o.cust_id
+
+UNION
+
+SELECT 
+	*
+FROM 
+	orders o
+RIGHT JOIN customers c ON c.id = o.cust_id;
+
+
+-- DML COMMANDS
+-- INSERT COMMAND
+-- UPDATE COMMAND 
+
+UPDATE customers
+SET email = 'sam@gmail.com'
+WHERE 'name' = 'sam';
+
+-- DELETE COMMAND
+DELETE FROM customers
+WHERE email = 'aa';
+
+-- TRANSFORMATIONS
+
+-- NUMERIC TRANSFORMATIONS
+ 
+ SELECT * FROM dim_product;
+ 
+ SELECT 
+	product_id,
+	unit_price * 0.90 AS discounted_price,
+    unit_price + 10 AS taxed_price,
+    unit_price / 10 AS fractioned_price,
+    ROUND(unit_price,2) AS rounded_price,
+    ROUND((unit_price * unit_price),2) AS multiplied_price
+FROM
+	dim_product
+ORDER BY unit_price DESC;
+    
+-- DATE TRANSFORMATIONS
+
+SELECT * FROM dim_date;
+
+-- level-1)
+SELECT
+	date,
+    now() AS 'current_timestamp' -- current time stamp
+FROM
+	dim_date;
+
+
+-- level-2)
+
+SELECT 
+	date,
+    now() AS 'current_timestamp',
+    utc_date(),
+    utc_time(),
+    utc_timestamp() -- we use utc because its generic
+FROM
+	dim_date;
+    
+-- level-3)
+
+SELECT 
+	date,
+    YEAR(date) AS 'YEAR',
+    MONTH(date) AS 'MONTH',
+    DAY(date) AS 'DAY',			-- every region of the world has its own prefernces 
+    WEEKDAY(date) AS 'weekday',
+    DAYNAME(date) AS 'dayname',
+	DATE(utc_timestamp()) AS date_utc,
+    now() AS 'today_date_and_time'
+FROM
+	dim_date;
+    
+-- level-4
+-- Adding dates and subtracting dates
+SELECT 
+	date,
+    DATE(utc_timestamp()) AS date_utc,
+    ADDDATE(date,2) AS add_date,
+    SUBDATE(date,2) AS sub_date,
+    ADDDATE(utc_timestamp,2) AS add_utc_date
+FROM
+	dim_date;
+    
+-- level-5 date difference
+
+SELECT 
+	date,
+    DATE(utc_timestamp()),
+    DATEDIFF(DATE(utc_timestamp()),date) AS total_days
+FROM
+	dim_date;
+
+-- level-6)
+-- TYPE CASTING 
+SELECT
+	date,
+    CAST('2025-01-09' AS date)
+FROM
+	dim_date;
+    
+-- DATE_FORMAT
+
+SELECT
+	date,
+    DATE_FORMAT(date, "%W %M %e %Y") AS converted_date
+FROM 
+	dim_date;
+
+
+-- STRING TRANSFORMATIONS -- TYPE CASTING
+
+/* TYPE CASTING IS USED TO JOIN TWO TABLES WHEN THE 
+ELEMENTS IN THE TABLES HAVE TWO DIFFERENT DATA TYPES*/
+
+ SELECT
+	customer_key,
+    CAST(customer_key AS CHAR(100))
+FROM dim_customer;
+
+-- STRING FUNCTIONS (endless)
+
+SELECT * FROM dim_customer;
+
+-- CONCAT
+
+SELECT 
+	CONCAT(first_name,' ',last_name) AS fullname,
+    CONCAT(first_name, ' | ', last_name),
+    CONCAT(first_name, ' , ', last_name),
+    CONCAT(first_name, '_',last_name),
+    CONCAT(first_name , ' + ', last_name)
+FROM dim_customer;
+
+-- LENGTH of a column
+SELECT * FROM dim_customer;
+
+SELECT 
+	*,
+	country,
+	LENGTH(country) AS country_length
+FROM
+	dim_customer;
+    
+-- convert the data into lower or uppercase
+
+SELECT 
+	*,
+    LOWER(city),
+    UPPER(country)
+FROM
+	dim_customer;
+    
+-- substring
+-- we are just extracting the sub-string from the string
+
+SELECT
+	substring(email,1,4) AS short_name, -- 1st alphabet to 4th alphabet 
+	substring(email,1,6) AS nickname
+FROM
+	dim_customer;
+
+-- REPLACE
+
+SELECT 
+	*,
+    REPLACE(email,'@','%')
+FROM 
+	dim_customer; 
+ 
+-- SLICING AND DICING
+-- n number of characters from left and n number of characters from right
+SELECT 
+	*,
+    LEFT(country, 3),
+    RIGHT(country , 3)
+FROM
+	dim_customer;
+
+-- REVERSE AND REPEAT ANY STRING
+SELECT
+	REVERSE(country),
+    REPEAT(first_name,2), -- repeat the firstname twice
+	REPEAT(CONCAT(first_name , ' ', last_name),2) AS full_name_twice,
+    REVERSE(REPEAT(CONCAT(first_name, ' ', last_name),2)) AS reversemerged_name
+FROM
+	dim_customer;
+    
+-- CONCAT_WS
+
+SELECT 
+	*,
+	CONCAT_WS(' | ' ,first_name,last_name,country,email) AS combined
+FROM 
+	dim_customer;
+    
+-- CONDITIONALS
+-- 1)
+SELECT -- price categories
+	*,
+    CASE
+    WHEN unit_price <= 100 THEN 'affortable'
+    WHEN unit_price <= 200 THEN 'normal'
+    ELSE 'expensive'
+    END AS price_category
+FROM dim_product;
+
+-- 2)
+SELECT 
+	*,
+    CASE 
+    WHEN unit_price <= 100 AND category = 'Clothing' THEN 'affortable'
+    WHEN unit_price <= 200 AND category = 'Clothing' THEN 'Normal'
+    WHEN unit_price >200 AND category = 'Clothing' THEN 'Expensive'
+    ELSE CONCAT('not for ',category)
+    END price_category
+FROM
+	dim_product;
+    
+ -- WINDOW FUNCTIONS
+ 
+ -- 1)
+ SELECT * FROM dim_product;
+ 
+ SELECT 
+	avg(unit_price)
+FROM
+	dim_product;
+    
+-- with window function
+SELECT
+	*,
+	SUM(unit_price) OVER(ORDER BY unit_price) -- running sum or running total
+FROM
+	dim_product;
+ 
+ SELECT 
+	*,
+    SUM(unit_price) OVER(ORDER BY launch_date) -- total earning by date 
+FROM 
+	dim_product;
+ 
+SELECT 
+	*,
+    AVG(unit_price) OVER(ORDER BY launch_date) -- moving average
+FROM
+	dim_product;
+
+-- 2)  FRAMES
+SELECT 
+	*,
+    SUM(unit_price) OVER(ORDER BY launch_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+FROM dim_product;
+    
+SELECT
+	*,
+    SUM(unit_price) OVER(ORDER BY launch_date ROWS BETWEEN UNBOUNDED preceding AND UNBOUNDED following) -- total sum it will keep on going until the end row
+FROM dim_product;
+
+
+-- RANKING FUNCTIONS
+-- 1)
+SELECT
+	unit_price AS price,
+    ROW_NUMBER() OVER(ORDER BY unit_price) AS 'row_number',
+    RANK() OVER(ORDER BY unit_price) AS 'rank',
+    DENSE_RANK() OVER(ORDER BY unit_price) AS 'dense_rank'
+FROM dim_product; -- check rank - 455 in the result to understand this better 
+
+-- 2) PARTITION BY
+SELECT 
+	unit_price AS price,
+    category,						-- resets the counting based on category
+    ROW_NUMBER() OVER(PARTITION BY category ORDER BY unit_price) AS 'row_number',
+    RANK() OVER(PARTITION BY category ORDER BY unit_price) AS 'rank',
+    RANK() OVER(PARTITION BY category ORDER BY unit_price) AS 'dense_rank'
+FROM
+	dim_product;
+    
+-- SUBQUERY
+-- we can feed a query inside a query in order to get a result
+
+-- 1)
+SELECT
+	*
+FROM 
+	dim_product
+WHERE 
+	unit_price > (SELECT AVG(unit_price) FROM dim_product)
+ORDER BY unit_price ASC;
+
+-- 2)
+SELECT 
+	*
+FROM 
+(
+SELECT
+	*
+FROM 
+	dim_product
+WHERE 
+	unit_price > (SELECT AVG(unit_price) FROM dim_product)
+ORDER BY unit_price ASC
+) AS SUBQUERY
+
+WHERE product_name = 'Figure Method'; 
+
+-- CTE's [common table expressions]
+WITH cte_table AS
+(
+SELECT
+	*
+FROM 
+	dim_product
+WHERE 
+	unit_price > (SELECT AVG(unit_price) FROM dim_product)
+ORDER BY unit_price ASC
+)
+SELECT 
+	* 
+FROM 
+	cte_table
+WHERE 
+	category = 'Figure Method';
+    
+-- IN condition with CTE's
+
+
+WITH cte_table AS
+(
+SELECT
+	*
+FROM 
+	dim_product
+
+),
+cte_table_2 AS
+(
+	SELECT
+	*
+FROM 
+	cte_table
+WHERE product_name IN ('Figure Method', 'Huge Change', 'Film Finally')
+)
+
+SELECT
+	*
+FROM 
+	cte_table_2
+WHERE product_name = 'Figure Method';
+
+-- LAG() & LEAD() window functions
+
+-- Real Time Senarios
+
+-- Scenario-1- [Finding the nth value]
+
+SELECT * FROM dim_product;
+
+SELECT 
+	*,
+DENSE_RANK() OVER(ORDER BY unit_price) AS 'ranking'
+FROM dim_product;
+
+
+
+SELECT 
+	sub_table.*
+    
+FROM 
+(
+SELECT 
+	*,
+	DENSE_RANK() OVER(PARTITION BY category ORDER BY unit_price DESC) AS ranking
+FROM dim_product
+) AS sub_table
+WHERE ranking = 10;
+
+-- Scenario-02-[removing the duplicates]
+
+INSERT INTO customers VALUES
+(301,'lamba', 'cc'),
+(101,'love', 'aa');
+
+SELECT 
+	*,
+ROW_NUMBER() OVER(PARTITION BY id ORDER BY name) AS dedup
+FROM
+	customers;
+    
+-- now we use subquery 
+SELECT 
+	subquery.*				-- This is how we remove duplicates
+FROM
+(
+SELECT 
+	*,
+ROW_NUMBER() OVER(PARTITION BY id ORDER BY name) AS dedup
+FROM
+	customers
+) AS subquery
+WHERE
+	dedup = 1;
+    
+    
+-- Scenario-03-[LAG() & LEAD()]
+-- helps to get the preceeding value and the following value
+
+CREATE TABLE weather
+(
+	id INT ,
+    temp FLOAT
+);
+
+INSERT INTO weather VALUES
+(1,10),
+(2,12),
+(3,9),
+(4,15),
+(5,20),
+(6,15),
+(7,12);
+
+
+SELECT * FROM weather;
+
+-- temperature of the previous day and next day
+
+SELECT 
+	*,
+    LAG(temp,1,'no value') OVER(ORDER BY id ASC) AS prev_day_temperature,
+    LAG(temp,2,0) OVER(ORDER BY id ASC) AS two_days_before_temp,
+    LEAD(temp,1) OVER(ORDER BY id ASC) AS next_day_temperature
+FROM 
+	weather;
+    
+
+
+
+-- VIEWS
+ 
+ SELECT 
+	subquery.*
+FROM
+(
+ SELECT
+	*,
+    ROW_NUMBER() OVER(PARTITION BY id ORDER BY id) AS dedup
+FROM	
+	customers
+) AS subquery
+WHERE dedup = 1;
+
+/* we can store this query and run it in one line, this can save a lot of time.
+So we basically store this query in an object and run it so that we can get a result
+that is the point of creating a view*/
+
+-- view is just a stored query, it cannot hold any data withput storing a query
+-- whenever we run a view it runs the query
+
+CREATE VIEW dedupee_view AS
+SELECT 
+	subquery.*
+FROM
+(
+ SELECT
+	*,
+    ROW_NUMBER() OVER(PARTITION BY id ORDER BY id) AS dedup
+FROM	
+	customers
+) AS subquery
+WHERE dedup = 1;
+
+SELECT * FROM dedupee_view WHERE email = 'aa';
+
+
+
+
+
+
+
+
+
+
 
